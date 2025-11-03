@@ -1,7 +1,8 @@
-import { getItem } from '@/hooks/useSecureStorage'
+
+import { useTodo } from '@/hooks/useTodo'
 import { Ionicons } from '@expo/vector-icons'
-import React, { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native'
+import React from 'react'
+import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native'
 
 interface Todo {
     id: string
@@ -13,82 +14,7 @@ interface Todo {
 }
 
 const RenderTodo = () => {
-    const [todos, setTodos] = useState<Todo[]>([])
-    const [loading, setLoading] = useState(true)
-    const [refreshing, setRefreshing] = useState(false)
-
-    // Fetch todos from secure storage
-    const fetchTodos = async () => {
-        try {
-            const storedTodos = await getItem("todo")
-            if (storedTodos && Array.isArray(storedTodos)) {
-                setTodos(storedTodos)
-            } else {
-                setTodos([])
-            }
-        } catch (error) {
-            console.error("Error fetching todos:", error)
-        } finally {
-            setLoading(false)
-            setRefreshing(false)
-        }
-    }
-
-    useEffect(() => {
-        fetchTodos()
-    }, [])
-
-    // Refresh handler
-    const handleRefresh = useCallback(() => {
-        setRefreshing(true)
-        fetchTodos()
-    }, [])
-
-    // Delete todo
-    const handleDelete = (todoId: string) => {
-        Alert.alert(
-            "Delete Todo",
-            "Are you sure you want to delete this todo?",
-            [
-                {
-                    text: "Cancel",
-                    style: "cancel"
-                },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        // Filter out the deleted todo
-                        const updatedTodos = todos.filter(todo => todo.id !== todoId)
-                        setTodos(updatedTodos)
-
-                        // Save to secure storage
-                        // You'll need to import your setItem function
-                        // await setItem("todo", updatedTodos)
-                    }
-                }
-            ]
-        )
-    }
-
-    const getImportanceColor = (importance: string | null) => {
-        switch (importance) {
-            case 'low': return '#22c065'
-            case 'medium': return '#f59e0b'
-            case 'high': return '#ef4444'
-            default: return '#6b7280'
-        }
-    }
-
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return 'No deadline'
-        const date = new Date(dateString)
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        })
-    }
+    const { todos, loading, refreshing, getImportanceColor, formatDate, handleDelete, handleRefresh } = useTodo();
 
     const renderTodoItem = ({ item }: { item: Todo }) => (
         <View className="bg-white rounded-xl p-4 mb-3 border border-gray-200">
@@ -98,6 +24,12 @@ const RenderTodo = () => {
                     <Text className="text-lg font-semibold text-gray-800" numberOfLines={2}>
                         {item.todoName}
                     </Text>
+                    {/* Description */}
+                    {item.description && (
+                        <Text className="text-sm text-gray-600 mt-0" numberOfLines={3}>
+                            {item.description}
+                        </Text>
+                    )}
                 </View>
                 <Pressable
                     onPress={() => handleDelete(item.id)}
@@ -110,7 +42,7 @@ const RenderTodo = () => {
 
             {/* Importance badge */}
             {item.importance && (
-                <View className="flex-row items-center mb-2">
+                <View className="flex-row items-center mb-2 -ml-[2px]">
                     <View
                         className="px-3 py-1 rounded-full"
                         style={{ backgroundColor: `${getImportanceColor(item.importance)}20` }}
@@ -135,12 +67,7 @@ const RenderTodo = () => {
                 </View>
             )}
 
-            {/* Description */}
-            {item.description && (
-                <Text className="text-sm text-gray-600 mt-2" numberOfLines={3}>
-                    {item.description}
-                </Text>
-            )}
+
         </View>
     )
 
