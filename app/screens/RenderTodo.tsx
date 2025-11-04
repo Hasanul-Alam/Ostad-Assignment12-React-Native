@@ -32,6 +32,7 @@ const RenderTodo = () => {
                     )}
                 </View>
                 <Pressable
+                    testID={`delete-todo-${item.id}`}  // ← ADD THIS LINE
                     onPress={() => handleDelete(item.id)}
                     className="p-1.5"
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
